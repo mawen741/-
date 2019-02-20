@@ -1,0 +1,293 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>数独小游戏</title>
+        <style>
+            html,div,body,ul,li{
+            margin:0;
+            padding: 0;
+        }
+        input{
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            vertical-align: middle;
+            border:1px solid #97e2b2;
+            text-align: center;
+            cursor: pointer;
+        }
+        input[disabled]{
+            cursor: not-allowed;
+            background-color: #e8e8e8;
+        }
+        .container{
+            margin:0 auto;
+            width: 276px;
+            height: 276px;
+            border:1px solid #f00;
+        }
+        .container .soku{
+            display: inline-block;
+            width: 90px;
+            border:1px solid #f00;
+        }
+        .container .soku li{
+            display: inline-block;
+        }
+        button{
+            padding: 5 10px;
+        }
+        select{
+            width:50px;
+            height: 30px;
+        }
+        .btns{
+            margin-top: 100px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .ml-40{
+            margin-left: 40px;
+        }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.6/dist/vue.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div class="btns">
+                    选择难度：<select v-model="degree" @change="changeDegree">
+                            <option v-for="item in degreeObj" :value="item.value">{{item.text}}</option>
+                        <select/>
+                <button @click="reset" class="ml-40">重置</button> <button @click="pause">{{pauseHtml}}</button> <span>用时：{{hour}}时{{min}}分{{sec}}秒</span>
+            </div>
+            <div class="container">
+                <ul class="soku" v-for="(i,row) in sokuNineArr">
+                    <li v-for="(m,col) in sokuNineArr"><input type="text" maxlength="1" :disabled="disabledMap[i][m]" v-model="dataMap[i][m]" @keydown="checkKeyCode($event)" @keyup="checkSoku(row,col,$event.target.value)"></li>
+                </ul>
+            </div>
+            
+        </div>
+
+    </body>
+    <script>
+        let vm = new Vue({
+            el:"#app",
+            data:{
+                sokuNineArr:[0,1,2,3,4,5,6,7,8],
+                dataMap:[],
+                disabledMap:[],
+                degree:"easy",
+                degreeObj:[{
+                    text:"简单",
+                    value:"easy"
+                },{
+                    text:"中等",
+                    value:"medium"
+                },{
+                    text:"高级",
+                    value:"difficult"
+                }],
+                hour:0,
+                min:0,
+                sec:0,
+                time:0,
+                timer:0,
+                pauseHtml:"暂停"
+            },
+            beforeCreate:function(){
+            },
+            created:function(){
+                console.log("created");
+                this.reset("easy");
+            },
+            methods:{
+                changeDegree(){
+                    var _this = this;
+                        _this.reset(_this.degree);
+                },
+                createSoku(degree){ //根据选择的难易程度创建数独表盘 
+                    //easy 每个独立的表格擦除3个数字
+                    //medium  每个独立的表格擦除4个数字
+                    //difficult  每个独立的表格擦除6个数字
+                    let _this = this;
+                    for(let m=0;m<9;m++){
+                        let RandomDelPos = _this.getSpecArr(_this.createNineRandom(),[0,{"easy":3,"medium":4,"difficult":6}[degree]]);  //获取需要清除的数据点位
+                        for(let i=0;i<RandomDelPos.length;i++){
+                            let arrItem = _this.dataMap[m],
+                                disabledItem = _this.disabledMap[m];
+                            arrItem.splice(RandomDelPos[i]-1,1,"");
+                            disabledItem.splice(RandomDelPos[i]-1,1,false);
+                        }
+                    }
+                },
+                createSokuData(){ //创建数独表盘的数字
+                    let _this = this;
+                    let nineRandom = _this.createNineRandom(); //
+                    _this.dataMap[4] = nineRandom; //创建第5个格子
+                    
+                    _this.dataMap[3] = _this.makeArrConact(_this.getSpecArr(nineRandom,[6,9]),_this.getSpecArr(nineRandom,[0,3]),_this.getSpecArr(nineRandom,[3,6]));//创建第四个格子
+                    _this.dataMap[5] = _this.makeArrConact(_this.getSpecArr(nineRandom,[3,6]),_this.getSpecArr(nineRandom,[6,9]),_this.getSpecArr(nineRandom,[0,3]));//创建第六个格子
+                   
+                    _this.dataMap[7] = _this.makeArrConact(_this.arrToGo(_this.getSpecArr(nineRandom,[0,3]),"next"),_this.arrToGo(_this.getSpecArr(nineRandom,[3,6]),"next"),_this.arrToGo(_this.getSpecArr(nineRandom,[6,9]),"next"));//创建第八个格子
+                    _this.dataMap[1] = _this.makeArrConact(_this.arrToGo(_this.getSpecArr(nineRandom,[0,3]),"prev"),_this.arrToGo(_this.getSpecArr(nineRandom,[3,6]),"prev"),_this.arrToGo(_this.getSpecArr(nineRandom,[6,9]),"prev"));//创建第二个格子
+
+                    _this.dataMap[0] = _this.makeArrConact(_this.arrToGo(_this.getSpecArr(nineRandom,[6,9]),"prev"),_this.arrToGo(_this.getSpecArr(nineRandom,[0,3]),"prev"),_this.arrToGo(_this.getSpecArr(nineRandom,[3,6]),"prev"));//创建第一个格子
+                    _this.dataMap[6] = _this.makeArrConact(_this.arrToGo(_this.getSpecArr(nineRandom,[6,9]),"next"),_this.arrToGo(_this.getSpecArr(nineRandom,[0,3]),"next"),_this.arrToGo(_this.getSpecArr(nineRandom,[3,6]),"next"));//创建第七个格子
+                   
+                    _this.dataMap[2] = _this.makeArrConact(_this.arrToGo(_this.getSpecArr(nineRandom,[3,6]),"prev"),_this.arrToGo(_this.getSpecArr(nineRandom,[6,9]),"prev"),_this.arrToGo(_this.getSpecArr(nineRandom,[0,3]),"prev"));//创建第三个格子
+                    _this.dataMap[8] = _this.makeArrConact(_this.arrToGo(_this.getSpecArr(nineRandom,[3,6]),"next"),_this.arrToGo(_this.getSpecArr(nineRandom,[6,9]),"next"),_this.arrToGo(_this.getSpecArr(nineRandom,[0,3]),"next"));//创建第九个格子
+                   
+                    [0,1,2,4,5,6,7,8,9].forEach(() => {
+                        _this.disabledMap.push([true,true,true,true,true,true,true,true,true]);
+                    })
+                    console.log(_this.disabledMap);
+
+                },
+                createNineRandom(){//创建九个顺序打乱的数
+                    let nineRandom = [];
+                        for(var i=0;i<9;i++){
+                            nineRandom[i]=i+1;
+                        }
+                        
+                        nineRandom.sort(function(){
+                            return 0.5-Math.random();
+                        })
+                        return nineRandom;
+                },
+                arrToGo(arr,operation){ //根据传过来的next和prev，将数组顺序移一格或者倒退移一格
+                    if(operation === "prev"){ //将数组顺序前移一格
+                        let lastItem = arr.pop();
+                            arr.splice(0,0,lastItem);
+                            
+                    }else if(operation === "next"){ //将数组顺序倒退移一格
+                        let firstItem = arr.shift();
+                            arr.push(firstItem);
+                    }
+                    return arr;
+                },
+                getSpecArr(arr,spec){//根据给定的下标给截出数组元素并返回新数组
+                    return arr.slice(spec[0],spec[1]);
+                },
+                makeArrConact(...arrs){ //将传入的数组通过concat连接成一个数组返回
+                    let newArr = [];
+                    for(let i=0;i<arrs.length;i++){
+                        newArr = newArr.concat(arrs[i]);
+                    }
+                    return newArr;
+                },
+                checkKeyCode(e){ //不允许除 1-9的数字和退格键的其它键盘输入
+                    let keycode = e.keyCode;
+                    if(keycode === 8 || (keycode < 58 && keycode >48) || (keycode < 106 && keycode >96)){
+                    }else{
+                        e.preventDefault();
+                        return false;
+                    }
+                },
+                checkSoku(row,col,val){ //查询数独的情况
+                    let _this = this;
+                    val = Number(String(val).replace(/\D|0/g,''));//首先转换输入的数字   
+                     _this.dataMap[row][col] = val;
+                     if(!val){
+                        return
+                     }
+                    if(_this.checkResult()){
+                        alert("ok");
+                        _this.pause();
+                    }else{
+                        console.log("继续努力")
+                    }
+                    // console.log(_this.dataMap)
+                },
+                checkResult(){
+                    let _this = this;
+                    return _this.checkSoKuNineItems(_this.dataMap) && _this.checkSoKuRows() && _this.checkSoKuCols();
+                },
+                checkSoKuNineItems(dataMapArr){ //查看每一个小九宫格数独是否正确
+                    let checkResult = true,
+                        _this = this;
+                    dataMapArr.some((rowArr) =>{
+                        if(checkResult === false){
+                            return false;
+                        }
+                        checkResult = _this.checkArrIncludeNineNos(rowArr);
+                        
+                    })
+                    return checkResult;
+                },
+                checkSoKuRows(){ //查看每一行数独是否正确
+                    //取每个单元的头三个，中间三个和后面三个组成新的临时数组
+                    let _this = this,
+                        d = _this.dataMap,
+                        tempDataMap = []; //临时的每行组成的数组
+                        [0,1,2].forEach(i => {
+                            [0,3,6].forEach((m) =>{
+                                tempDataMap.push(_this.makeArrConact(_this.getSpecArr(d[i*3],[m,m+3]),_this.getSpecArr(d[i*3+1],[m,m+3]),_this.getSpecArr(d[i*3+2],[m,m+3])));
+                            })
+                        })
+                     
+                     return _this.checkSoKuNineItems(tempDataMap);
+                },
+                checkSoKuCols(){ //查看每一列数独是否正确
+                    let _this = this,
+                        d = _this.dataMap,
+                        tempDataMap = []; //临时的每列组成的数组
+                        [0,1,2,3,4,5,6,7,8].forEach(i => {
+                            tempDataMap.push(_this.makeArrConact(d[0][i],d[1][i],d[2][i],d[3][i],d[4][i],d[5][i],d[6][i],d[7][i],d[8][i]));
+                        })
+                     return _this.checkSoKuNineItems(tempDataMap);
+                },
+                checkArrIncludeNineNos(arr){ //查询一个数组是否包含1-9,9个数字
+                    let checkResult = true;
+                        [1,2,3,4,5,6,7,8,9].some((val) => {
+                            if(!arr.includes(val)){
+                                checkResult = false;
+                                return false;
+                            }
+                        });
+                        return checkResult;
+                },
+                reset(){ //重置
+                    let _this = this;
+                    _this.disabledMap = [];
+
+                    _this.createSokuData();
+                    _this.createSoku(_this.degree);
+                    _this.time = 0;
+                    clearInterval(_this.timer);
+                    _this.calTimer(0);
+                },
+                calTimer(){
+                    let _this = this;
+                        _this.timer = setInterval(function(){
+                            _this.time++;
+                            _this.calSeconds(_this.time);
+                        },1000);
+                },
+                pause(){ //暂停
+                    let _this = this;
+                    if(_this.checkResult()){ clearInterval(_this.timer);return}
+                    if(_this.pauseHtml === "暂停"){
+                        _this.pauseHtml = "继续";
+                        clearInterval(_this.timer);
+                    }else{
+                        _this.pauseHtml = "暂停";
+                        _this.calTimer();
+                    }
+                },
+                calSeconds(time){ //将时间戳转换成时分秒
+                    this.time = time;
+                    this.hour = parseInt(time /3600);
+                    this.min = parseInt((time-this.hour*3600)/60);
+                    this.sec = (time-this.hour*3600)%60;
+                }
+            },
+            beforeMount(){
+
+            },
+            mounted(){
+                console.log("mounted")
+            }
+        });
+    </script>
+</html>
