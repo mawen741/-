@@ -3,49 +3,54 @@
         <meta charset="utf-8">
         <title>数独游戏</title>
         <link rel="stylesheet" href="../css/soku.css">
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.6/dist/vue.js"></script>
+        <script src="../js/VUE2.6.6.js"></script>
     </head>
     <body>
         <div id="app">
-            <div class="btns">
-                    选择难度：<select v-model="degree" @change="changeDegree">
-                            <option v-for="item in degreeObj" :value="item.value">{{item.text}}</option>
-                        <select/>
-                <button @click="reset" class="ml-40">重置</button> <button @click="pause">{{pauseHtml}}</button> <span>用时：{{hour}}时{{min}}分{{sec}}秒</span>
-            </div>
-            <div class="container">
-                <ul class="soku" v-for="(i,row) in sokuNineArr">
-                    <li v-for="(m,col) in sokuNineArr"><input type="text" maxlength="1" :disabled="disabledMap[i][m]" v-model="dataMap[i][m]" @keydown="checkKeyCode($event)" @keyup="checkSoku(row,col,$event.target.value)"></li>
-                </ul>
-            </div>
-            
+            <game-component></game-component>
         </div>
-
+        <template id="gameComponent">
+            <div>
+                <div class="btns">
+                        选择难度：<select v-model="degree" @change="changeDegree">
+                                <option v-for="item in degreeObj" :value="item.value">{{item.text}}</option>
+                            <select/>
+                    <button @click="reset" class="ml-40">重置</button> <button @click="pause">{{pauseHtml}}</button> <span>用时：{{hour}}时{{min}}分{{sec}}秒</span>
+                </div>
+                <div class="container">
+                    <ul class="soku" v-for="(i,row) in sokuNineArr">
+                        <li v-for="(m,col) in sokuNineArr"><input type="text" maxlength="1" :disabled="disabledMap[i][m]" v-model="dataMap[i][m]" @keydown="checkKeyCode($event)" @keyup="checkSoku(row,col,$event.target.value)"></li>
+                    </ul>
+                </div>
+            </div>
+        </template>
     </body>
     <script>
-        let vm = new Vue({
-            el:"#app",
-            data:{
-                sokuNineArr:[0,1,2,3,4,5,6,7,8],
-                dataMap:[],
-                disabledMap:[],
-                degree:"easy",
-                degreeObj:[{
-                    text:"简单",
-                    value:"easy"
-                },{
-                    text:"中等",
-                    value:"medium"
-                },{
-                    text:"高级",
-                    value:"difficult"
-                }],
-                hour:0,
-                min:0,
-                sec:0,
-                time:0,
-                timer:0,
-                pauseHtml:"暂停"
+        Vue.component('game-component',{
+            template: '#gameComponent',
+            data(){
+                return {
+                    sokuNineArr:[0,1,2,3,4,5,6,7,8],
+                    dataMap:[],
+                    disabledMap:[],
+                    degree:"easy",
+                    degreeObj:[{
+                        text:"简单",
+                        value:"easy"
+                    },{
+                        text:"中等",
+                        value:"medium"
+                    },{
+                        text:"高级",
+                        value:"difficult"
+                    }],
+                    hour:0,
+                    min:0,
+                    sec:0,
+                    time:0,
+                    timer:0,
+                    pauseHtml:"暂停"
+                }
             },
             beforeCreate:function(){
             },
@@ -131,6 +136,7 @@
                 checkKeyCode(e){ //不允许除 1-9的数字和退格键的其它键盘输入
                     let keycode = e.keyCode;
                     if(keycode === 8 || (keycode < 58 && keycode >48) || (keycode < 106 && keycode >96)){
+
                     }else{
                         e.preventDefault();
                         return false;
@@ -139,17 +145,17 @@
                 checkSoku(row,col,val){ //查询数独的情况
                     let _this = this;
                     val = Number(String(val).replace(/\D|0/g,''));//首先转换输入的数字   
-                     _this.dataMap[row][col] = val;
                      if(!val){
                         return
                      }
+                     _this.dataMap[row][col] = val;
+
                     if(_this.checkResult()){
                         alert("ok");
                         _this.pause();
                     }else{
                         console.log("继续努力")
                     }
-                    // console.log(_this.dataMap)
                 },
                 checkResult(){
                     let _this = this;
@@ -163,7 +169,6 @@
                             return false;
                         }
                         checkResult = _this.checkArrIncludeNineNos(rowArr);
-                        
                     })
                     return checkResult;
                 },
@@ -240,6 +245,9 @@
             mounted(){
                 console.log("mounted")
             }
+        });
+        let vm = new Vue({
+            el:"#app"
         });
     </script>
 </html>

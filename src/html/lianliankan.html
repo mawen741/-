@@ -2,99 +2,63 @@
     <head>
         <meta charset="utf-8">
         <title>连连看游戏</title>
-        <style>
-            html,div,body,ul,li{
-                margin:0;
-                padding: 0;
-            }
-            button{
-                padding: 5 10px;
-            }
-            select{
-                width:50px;
-                height: 30px;
-            }
-            .container-degree{
-                margin-top: 100px;
-                margin-bottom: 20px;
-                text-align: center;
-            }
-            .btns{
-                margin-bottom: 20px;
-                text-align: center;
-            }
-            .container{
-                text-align: center;
-            }
-            .container ul{
-                display: inline-block;
-                width: 564px;
-            }
-            .container ul li{
-                display: inline-block;
-                width: 80px;
-                height: 80px;
-                margin: 5px;
-                vertical-align: middle;
-            }
-            .container ul li img.active{
-                border:2px solid red;
-            }
-            .container ul li img{
-                border:2px solid green;
-            cursor: pointer;
-            }
-        </style>
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.6/dist/vue.js"></script>
+        <link rel="stylesheet" href="../css/lianliankan.css">
+        <script src="../js/VUE2.6.6.js"></script>
     </head>
     <body>
         <div id="app">
-            <div class="container-degree">
-                <span>选择难度</span>
-                <select v-model="degree" @change="changeDegree">
-                    <option v-for="item in degreeObj" :value="item.value">{{item.text}}</option>
-                </select>
-            </div>
-            <div class="btns">
-                <button @click="reset">重置</button>
-                <button @click="pause">{{pauseHtml}}</button>
-                <span>总用时：{{hour}}时{{min}}分{{sec}}秒</span>
-                <span></span>
-            </div>
-            <div class="container">
-                <h2 v-if="item.join('') === ''">恭喜完成。用时：{{hour}}时{{min}}分{{sec}}秒</h2>
-                <ul>
-                    <li v-for="(i,key) in item" :data="i"><img  @click="chooseItem(key)" :class="{active:activeItemKey === key}" v-if="i !== ''" :src="staticUrl+Math.ceil(i/2)+pngSuffix" alt=""></li>
-                </ul>
-            </div>
+            <game-component></game-component>
         </div>
-
+        <template id="gameComponent">
+            <div>
+                <div class="container-degree">
+                    <span>选择难度</span>
+                    <select v-model="degree" @change="changeDegree">
+                        <option v-for="item in degreeObj" :value="item.value">{{item.text}}</option>
+                    </select>
+                </div>
+                <div class="btns">
+                    <button @click="reset">重置</button>
+                    <button @click="pause">{{pauseHtml}}</button>
+                    <span>总用时：{{hour}}时{{min}}分{{sec}}秒</span>
+                    <span></span>
+                </div>
+                <div class="container">
+                    <h2 v-if="item.join('') === ''">恭喜完成。用时：{{hour}}时{{min}}分{{sec}}秒</h2>
+                    <ul>
+                        <li v-for="(i,key) in item" :data="i"><img  @click="chooseItem(key)" :class="{active:activeItemKey === key}" v-if="i !== ''" :src="staticUrl+Math.ceil(i/2)+pngSuffix" alt=""></li>
+                    </ul>
+                </div>
+            </div>
+        </template>
     </body>
     <script>
-        let vm = new Vue({
-            el:"#app",
-            data:{
-                degree:12, //当前难度
-                degreeObj:[{ //难度选中下拉框的值
-                    text:"简单",
-                    value:12
-                },{
-                    text:"中等",
-                    value:24
-                },{
-                    text:"高级",
-                    value:48
-                }],
-                item:[], //打乱顺序的列表元素
-                activeItemKey:"",//当前选中的item
-                staticUrl:"../img/lianliankan/img",
-                pngSuffix:".png",
-                hour:0,
-                min:0,
-                sec:0,
-                time:0,
-                timer:0,
-                pauseHtml:"暂停"
+        Vue.component('game-component',{
+            template: '#gameComponent',
+            data(){
+                return {
+                    degree:12, //当前难度
+                    degreeObj:[{ //难度选中下拉框的值
+                        text:"简单",
+                        value:12
+                    },{
+                        text:"中等",
+                        value:24
+                    },{
+                        text:"高级",
+                        value:48
+                    }],
+                    item:[], //打乱顺序的列表元素
+                    activeItemKey:"",//当前选中的item
+                    staticUrl:"../img/lianliankan/img",
+                    pngSuffix:".png",
+                    hour:0,
+                    min:0,
+                    sec:0,
+                    time:0,
+                    timer:0,
+                    pauseHtml:"暂停"
+                }
             },
             beforeCreate:function(){
             },
@@ -192,6 +156,9 @@
             mounted(){
                 console.log("mounted")
             }
+        });
+        let vm = new Vue({
+            el:"#app"
         });
     </script>
 </html>
