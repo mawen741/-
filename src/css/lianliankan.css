@@ -1,0 +1,41 @@
+html,div,body,ul,li{
+    margin:0;
+    padding: 0;
+}
+button{
+    padding: 5 10px;
+}
+select{
+    width:50px;
+    height: 30px;
+}
+.container-degree{
+    margin-top: 100px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.btns{
+    margin-bottom: 20px;
+    text-align: center;
+}
+.container{
+    text-align: center;
+}
+.container ul{
+    display: inline-block;
+    width: 564px;
+}
+.container ul li{
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    margin: 5px;
+    vertical-align: middle;
+}
+.container ul li img.active{
+    border:2px solid red;
+}
+.container ul li img{
+    border:2px solid green;
+   cursor: pointer;
+}

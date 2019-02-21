@@ -1,0 +1,47 @@
+html,div,body,ul,li{
+    margin:0;
+    padding: 0;
+}
+input{
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    vertical-align: middle;
+    border:1px solid #97e2b2;
+    text-align: center;
+    cursor: pointer;
+}
+input[disabled]{
+    cursor: not-allowed;
+    background-color: #e8e8e8;
+}
+.container{
+    margin:0 auto;
+    width: 276px;
+    height: 276px;
+    border:1px solid #f00;
+}
+.container .soku{
+    display: inline-block;
+    width: 90px;
+    border:1px solid #f00;
+}
+.container .soku li{
+    display: inline-block;
+}
+button{
+    padding: 5 10px;
+}
+select{
+    width:50px;
+    height: 30px;
+}
+.btns{
+    margin-top: 100px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.ml-40{
+    margin-left: 40px;
+}
