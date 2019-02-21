@@ -1,0 +1,67 @@
+html,div,body,ul,li,p{
+    margin:0;
+    padding: 0;
+}
+.container{
+    text-align: center
+}
+.container .container-body{
+}
+.container ul{
+    display: inline-block;
+    width: 492px;
+    height: 492px;
+    border:1px solid #1cce5b;
+    vertical-align: middle;
+}
+.container ul li{
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    text-align: center;
+    background-color: #c1c1c1;
+    border:1px solid green;
+    cursor: pointer;
+}
+.container ul li:hover{
+    background-color: #ccc;
+}
+.container ul li.safe{
+    background-color: #73ca73;
+    color: #fff;
+    cursor: default;
+}
+.container ul li.danger{
+    background-color: red;
+    color: #fff;
+    cursor: default;
+}
+.container .tips{
+    display: inline-block;
+    width: 200px;
+    height: 492px;
+    padding-left:5px;
+    border:1px solid #1cce5b;
+    vertical-align: middle;
+    overflow-y: scroll;
+    text-align: left;
+    padding-left:5px;
+}
+button{
+    padding: 5 10px;
+}
+.btns{
+    margin-top: 100px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.user-info{
+    margin-top: 10px;
+    font-size: 16px;
+}
+.user-info .user{
+    font-size:18px;
+    font-weight: bold;
+    color:red;
+}

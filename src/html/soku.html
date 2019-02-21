@@ -134,7 +134,12 @@
                     return newArr;
                 },
                 checkKeyCode(e){ //不允许除 1-9的数字和退格键的其它键盘输入
-                    let keycode = e.keyCode;
+                    let keycode = e.keyCode,
+                        _this = this;
+                    if(_this.pauseHtml === "继续"){
+                        e.preventDefault();
+                        return false;
+                    }
                     if(keycode === 8 || (keycode < 58 && keycode >48) || (keycode < 106 && keycode >96)){
 
                     }else{

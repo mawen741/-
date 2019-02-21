@@ -66,6 +66,9 @@
                 },
                 change(that,value,key){
                     let _this = this;
+                    if(_this.pauseHtml === "继续"){
+                        return;
+                    }
                     if(_this.checkOk()){
                         _this.pause();
                         return;

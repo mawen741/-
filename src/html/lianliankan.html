@@ -87,6 +87,9 @@
                 },
                 chooseItem(key){ //点击选择item的key
                    let _this = this;
+                        if(_this.pauseHtml === "继续"){
+                            return;
+                        }
                         if(_this.activeItemKey && _this.activeItemKey != key){ 
                             _this.judgeItem(_this.activeItemKey,key);
                         }else{//当一个项目都没被选中时，先选中该项目
@@ -97,6 +100,7 @@
                 judgeItem(i,j){ //判断选中的两个模块是否相同
                     let _this = this,
                         d = _this.item;
+                        
                         if(Math.ceil(d[i]/2) === Math.ceil(d[j]/2) || Math.ceil(d[i]/2) === Math.ceil(d[j]/2)){ //选中的两个木块是相同的
                             _this.destoryItem(i,j);
                         }else{ //选中的两个模块不同，修改选中状态为第二个模块

@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>翻牌</title>
+        <link rel="stylesheet" href="../css/flipCards.css">
+        <script src="../js/VUE2.6.6.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <game-component></game-component>
+        </div>
+        <template id="gameComponent">
+            <div>
+                <div class="btns">
+                    <button @click="reset">重置</button>
+                    <button @click="pause">{{pauseHtml}}</button>
+                    <span>总用时：{{hour}}时{{min}}分{{sec}}秒</span>
+                    <p class="user-info">当前顺序为 <span class="user">玩家{{user}}</span> 的顺序</p>
+                </div>
+                <div class="container">
+                    <ul>
+                        <li v-for="(i,key) in item" :class="{'safe':i==='safe','danger':i==='danger'}" :data-status="(i==='safe' || i ==='danger')?0:1" @click="chooseItem($event,i,key)" v-html="translate(i)"></li>
+                    </ul>
+                    <div class="tips">
+                        <p v-for="item in tipsInfo">{{item}}</p>   
+                    </div>
+                </div>
+                
+            </div>
+        </template>
+    </body>
+    <script>
+        Vue.component('game-component',{
+            template: '#gameComponent',
+            data(){
+                return {
+                    item:[],
+                    problemItem:8, //有问题的元素
+                    user:1,
+                    tipsInfo:[],
+                    hour:0,
+                    min:0,
+                    sec:0,
+                    time:0,
+                    timer:0,
+                    pauseHtml:"暂停", 
+                }
+            },
+            beforeCreate:function(){
+            },
+            created:function(){
+                console.log("created");
+                this.reset();
+            },
+            methods:{
+                createItem(){
+                    let _this = this;
+                        _this.item = [];
+                        for(var i=0;i<36;i++){
+                            _this.item[i]=i+1;
+                        }
+                        
+                        _this.item.sort(function(){
+                            return 0.5-Math.random();
+                        })
+                },
+                translate(i){ //根据元素的值，展示元素的html
+                    let html;
+                    if(i === "safe"){
+                        html = "安全";
+                    }else if(i === "danger"){
+                        html = "踩雷";
+                    }else{
+                        html = "&nbsp;";
+                    }
+                    return html;
+                },
+                chooseItem(e,i,key){ //选择元素
+                    let _this = this;
+                    if(_this.pauseHtml === "继续"){
+                        return;
+                    }
+                    if(!_this.isOk()){
+                        if(e.target.dataset.status === "0"){ 
+                            console.log("你已经翻了这块牌子了");
+                        }else{
+                            if(i === _this.problemItem){ //中奖了
+                                _this.item.splice(key,1,"danger");
+                                _this.pause();
+                                alert("ok");
+                            }else{
+                                _this.item.splice(key,1,"safe");
+                                console.log("继续");
+                            }
+                            _this.log();
+                            e.target.dataset.status = "0";
+                        }
+                    }else{
+                        console.log("已经结束拉");
+                    }
+                },
+                log(){ //记录操作日志
+                    let _this = this;
+                    _this.tipsInfo.push("玩家"+_this.user+"："+(_this.isOk()?"踩雷了。":"安全"));
+                    _this.user = _this.isOk()?_this.user:(_this.user === 1?2:1);
+                },
+                isOk(){ //本局是否已经结束
+                    return !this.item.includes(this.problemItem)
+                },
+                reset(){
+                    let _this = this;
+                        _this.user = 1
+                        _this.tipsInfo = [];
+                        _this.createItem();
+                        _this.time=0;
+                        clearInterval(_this.timer);
+                        _this.calTimer();
+                },
+                calTimer(){
+                    let _this = this;
+                        _this.timer = setInterval(function(){
+                            _this.time++;
+                            _this.calSeconds(_this.time);
+                        },1000);
+                },
+                pause(){ //暂停
+                    let _this = this;
+                    if(_this.isOk()){ clearInterval(_this.timer);return}
+                    if(_this.pauseHtml === "暂停"){
+                        _this.pauseHtml = "继续";
+                        clearInterval(_this.timer);
+                    }else{
+                        _this.pauseHtml = "暂停";
+                        _this.calTimer();
+                    }
+                },
+                calSeconds(time){ //将时间戳转换成时分秒
+                    this.time = time;
+                    this.hour = parseInt(time /3600);
+                    this.min = parseInt((time-this.hour*3600)/60);
+                    this.sec = (time-this.hour*3600)%60;
+                }
+            },
+            beforeMount(){
+
+            },
+            mounted(){
+                console.log("mounted")
+            }
+        });
+        let vm = new Vue({
+            el:"#app"
+        });
+    </script>
+</html>
