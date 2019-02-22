@@ -1,0 +1,38 @@
+html,div,body,ul,li,p{
+    margin:0;
+    padding: 0;
+}
+select{
+    width:50px;
+    height: 30px;
+}
+.container-degree{
+    margin-top: 100px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.container{
+}
+.container ul{
+    /* width: 500px; */
+    margin:0 auto;
+}
+.container ul li{
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    line-height: 25px;
+    background-color: #ccc;
+    border:1px solid green;
+    vertical-align: middle;
+    cursor: pointer;
+}
+.container ul li.clicked{
+    background-color: #fff;
+    cursor:default;
+}
+.container ul li img{
+    width: 25px;
+    height: 25px;
+}
