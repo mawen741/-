@@ -11,16 +11,19 @@
         </div>
         <template id="gameComponent">
             <div>
+                <div class="btns">
+                    <button @click="reset" class="ml-40">重置</button> <button @click="pause">{{pauseHtml}}</button> <span>用时：{{hour}}时{{min}}分{{sec}}秒</span>
+                </div>
                 <div class="container-degree">
                     <span>选择难度</span>
                     <select v-model="degree" @change="changeDegree">
                         <option v-for="item in degreeObj" :value="item.value">{{item.text}}</option>
                     </select>
-                    <span>{{sumLei}}</span>    
+                    <span>剩余雷数：{{sumLeavedLei}}</span>    
                 </div>
                 <div class="container">
                     <ul :style="'width:'+degree*27" v-for="(rowItem,row) in item">
-                        <li v-for="(val,col) in rowItem" @click="leftClick(row,col)" @contextmenu.prevent="rightClick(row,col)" :class="{clicked:val.status === 1}"><span v-if="val.leiNo !== ''">{{val.leiNo}}</span><img :src="leiImgSrc" v-if="val.identity === 1 && val.status === 1"><img :src="redFlagImgSrc" v-if="val.status === 2"><img :src="doubtImgSrc" v-if="val.status === 3"></li>
+                        <li v-for="(val,col) in rowItem" :data="val.identity" @click="leftClick(row,col)" @contextmenu.prevent="rightClick(row,col)" :class="{clicked:val.status === 1}"><span v-if="val.leiNo !== ''">{{val.leiNo}}</span><img :src="leiImgSrc" v-if="val.identity === 1 && val.status === 1"><img :src="redFlagImgSrc" v-if="val.status === 2"><img :src="doubtImgSrc" v-if="val.status === 3"></li>
                         <!-- <li v-for="(val,col) in rowItem" @click="leftClick(row,col)"><img :src="leiImgSrc" v-if="val.status === 1" /></li> -->
                     </ul>
                 </div>
@@ -46,11 +49,18 @@
                         value:20
                     }],
                     sumLei:0, //雷的总数
+                    sumLeavedLei:0, //剩余雷的总数
                     item:[],
                     leiItem:[], //雷区的随机数组
                     leiImgSrc:'../img/winmine/lei.png', //地雷的图片
                     redFlagImgSrc:'../img/winmine/redFlag.png', //红旗的图片
                     doubtImgSrc:'../img/winmine/doubt.png', //疑问的图片
+                    hour:0,
+                    min:0,
+                    sec:0,
+                    time:0,
+                    timer:0,
+                    pauseHtml:"暂停"
                     
                 }
             },
@@ -59,18 +69,19 @@
             },
             methods:{
                 changeDegree(){
-                    this.reset(this.degree);
+                    this.reset();
                 },
                 createRadomLei(){ //产生随机的雷区
                     let _this = this;
                         _this.leiItem = [];
-                        while (_this.leiItem.length < this.degree) {
-                            let randomNo = Math.ceil(Math.random()*this.degree*this.degree);
-                                if(!_this.leiItem.includes(randomNo)){
+                        while (_this.leiItem.length < this.sumLei) {
+                            let random = Math.random(),
+                                randomNo = Math.ceil(random*this.degree*this.degree); 
+
+                                if(!_this.leiItem.includes(randomNo) && random  !== 1){ //不能生产最后一个数
                                     _this.leiItem.push(randomNo);
                                 }
                         }
-                        console.log(_this.leiItem);
                         _this.createDimensionalNo();
                 },
                 createDimensionalNo(){ 
@@ -90,15 +101,14 @@
                                 _item[j].status = 0; //当前方块的状态
                                 _item[j].order = j; //当前方块的序号
                                 _item[j].leiNo = ""; //当前方块附近雷的数量
-
-                                if(_this.leiItem.includes(Number(i+""+j))){ //判断当前是否是雷
+                                if(_this.leiItem.includes(i*_this.degree+j)){ //判断当前是否是雷
                                     _item[j].identity = 1; //当前方块的标记
                                 }else{
                                     _item[j].identity = 0;
                                 }
+                                   
                             }
                         }
-                        console.log(_this.item);
                 },
                 leftClick(row,col){ //点击鼠标左键检验
                     let _this = this,
@@ -109,9 +119,8 @@
                         if(_itemRow[col].status === 1){ //先检测是否已被点击
                             return ;
                         }
-                        console.log("row="+row+";col="+col);
                         if(_itemRow[col].status != 0){ //如果之前标记的雷后者不确定，此时点击需要将雷的总数+1
-                            _this.sumLei++;
+                            _this.sumLeavedLei++;
                         }
                         //将当前状态更新为已点击
                         _this.refreshArrObj(row,col,"status",1);
@@ -120,9 +129,14 @@
                         if(_itemRow[col].identity === 1){
                             _this.gameOver = true;
                             _this.showAllLei();
+                            clearInterval(_this.timer);
+
                             alert("失败了");
                         }else{
                             _this.judgeAutoOpen(Number(row),Number(col));//选择某一方块后，自动判断是否打开周围的方块，标记当前方块附近的雷的总数
+                            if(_this.isOk()){
+                                alert("成功");
+                            }
                         }
                         
                 },
@@ -135,15 +149,14 @@
                         if(_itemRow[col].status === 1){ //先检测是否已被点击
                             return ;
                         }
-                        if(!(_this.sumLei !== 0 || _itemRow[col].status !== 0)){ // 标雷的旗帜已经用完了
+                        if(!(_this.sumLeavedLei !== 0 || _itemRow[col].status !== 0)){ // 标雷的旗帜已经用完了
                             return;
                         }
-                        console.log("row="+row+";col="+col);
                         //status 代表状态 0：未点击  1代表被点开 2代表是雷  3代表不确定
                         let _status = _itemRow[col].status;
                         switch(_status){
-                            case 0:_status = 2;_this.sumLei--;break;
-                            case 2:_status = 3;_this.sumLei++;break;
+                            case 0:_status = 2;_this.sumLeavedLei--;break;
+                            case 2:_status = 3;_this.sumLeavedLei++;break;
                             case 3:_status = 0;break;
                         }
                         //将当前状态更新为已点击
@@ -155,10 +168,7 @@
                         //首先找到本方块附近还未被点击开的方块是哪些
                         nearItem = _this.findNearItem(row,col); //附近还未被点击开的方块组成的数组
 
-                        console.log("row="+row+";col="+col);
-                        
                         let sumLeiNo = _this.judgeItemLeiNo(nearItem);
-                            console.log(sumLeiNo);
                             
                             //将当前方格有多少雷展示出来
                             if(sumLeiNo>0 && _itemRow[col].identity != 1){
@@ -171,9 +181,9 @@
                     let nearItem = [],
                         _this = this;
                         for(let i= row-1;i<=row+1;i++){
-                            if(i >= 0 && i<=9){
+                            if(i >= 0 && i<_this.degree){
                                 for(let j=col-1;j<=col+1;j++){
-                                    if(j >= 0 && j<=9){
+                                    if(j >= 0 && j<_this.degree){
                                         if(!(i == row && j == col) && _this.item[i][j].status !== 1){
                                             nearItem.push(_this.item[i][j]);
                                         }
@@ -206,9 +216,10 @@
                         _this.refreshArrObj(item.row,item.col,"status",1);
                         let nearItem2 = _this.findNearItem(item.row,item.col); //附近还未被点击开的方块组成的数组
                         let sumLeiNo = _this.judgeItemLeiNo(nearItem2);
-                        
+                            
                         //将当前方格有多少雷展示出来
                         if(sumLeiNo>0){
+                            _this.refreshArrObj(item.row,item.col,"leiNo",sumLeiNo);
                         }else{ //当前方格周围的几个都没有雷格
                             _this.autoOpen(nearItem2);
                         }
@@ -216,15 +227,67 @@
                 },
                 showAllLei(){ //将全部的雷展示出来
                     let _this = this;
-                    console.log("show all lei");
+                    _this.leiItem.forEach(leiItemVal => {
+                        _this.refreshArrObj(parseInt(leiItemVal/_this.degree),leiItemVal%_this.degree,"status",1);
+                    })
                     
+                },
+                isOk(){ //校验是否已完成
+                    let _this = this,
+                        hasClickedItem = [],
+                        okFlag = false;
+                         
+                        _this.item.forEach( itemArr => {
+                           for(arr in itemArr){
+                                if(itemArr[arr].status === 1){
+                                    hasClickedItem.push(itemArr[arr]);
+                                }
+                           }
+                        })
+                        
+                        if(hasClickedItem.length === _this.degree * _this.degree - _this.sumLei){
+                            okFlag = true; 
+                            _this.gameOver = true;
+                            clearInterval(_this.timer);
+                        }
+
+                        return okFlag;
+                        
                 },
                 reset(){
                     let _this = this;
-                        // _this.createDimensionalNo();
+
                         _this.gameOver = false;
-                        _this.sumLei = _this.degree;
+                        _this.sumLei  = _this.sumLeavedLei= {"10":2,"15":15,"20":50}[this.degree];
+                        // _this.sumLei = _this.degree;
                         _this.createRadomLei();
+                        _this.time = 0;
+                        clearInterval(_this.timer);
+                        _this.calTimer(0);
+                },
+                calTimer(){
+                    let _this = this;
+                        _this.timer = setInterval(function(){
+                            _this.time++;
+                            _this.calSeconds(_this.time);
+                        },1000);
+                },
+                pause(){ //暂停
+                    let _this = this;
+                    if(_this.isOk() || _this.gameOver === true){ clearInterval(_this.timer);return}
+                    if(_this.pauseHtml === "暂停"){
+                        _this.pauseHtml = "继续";
+                        clearInterval(_this.timer);
+                    }else{
+                        _this.pauseHtml = "暂停";
+                        _this.calTimer();
+                    }
+                },
+                calSeconds(time){ //将时间戳转换成时分秒
+                    this.time = time;
+                    this.hour = parseInt(time /3600);
+                    this.min = parseInt((time-this.hour*3600)/60);
+                    this.sec = (time-this.hour*3600)%60;
                 }
             },
             mounted(){
